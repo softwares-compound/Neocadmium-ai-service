@@ -12,3 +12,4 @@ pymongo
 nuitka
 pytest
 black
+pyinstaller
