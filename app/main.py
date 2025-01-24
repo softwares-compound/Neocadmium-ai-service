@@ -5,15 +5,7 @@ from fastapi import FastAPI, WebSocket
 from app.core.websocket_client import start_websocket_client
 from app.core.websocket_server import websocket_endpoint, electron_ws_manager
 from app.core.config import API_BASE_URL, settings
-from app.rag.paradigms.naive_rag.naive_rag_executer import NaiveRAGService
 
-app = FastAPI()
-
-
-import asyncio
-from fastapi import FastAPI, WebSocket
-from app.core.websocket_server import websocket_endpoint
-from app.core.config import settings
 
 app = FastAPI()
 
