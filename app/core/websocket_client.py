@@ -87,8 +87,7 @@ class RustWebSocketClient:
             response = requests.get(f"{API_BASE_URL}/logs/{log_id}", headers=headers)
             if response.status_code == 200:
                 log_data = response.json()
-                
-                # ✅ Keep the existing log processing logic
+
                 await self.broadcast_log(log_data, application_id, log_id)
                 asyncio.create_task(process_log(log_data, application_id, log_id, self.app))
             

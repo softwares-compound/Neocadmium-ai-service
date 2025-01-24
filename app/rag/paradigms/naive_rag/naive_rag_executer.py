@@ -22,13 +22,14 @@ class NaiveRAGService:
         os.makedirs(self.persist_dir, exist_ok=True)  
         self.index_cache = {} 
         Settings.llm = llm
+        self.index = None
         Settings.embed_model = embedding
         self.response_streaming = settings.response_streaming
         try:
             # Load or create the index during initialization
             self.index = self._load_or_create_index()
-        except:
-            print(f"Failed to load or create index for application_id '{self.application_id}'.")
+        except Exception as e:
+            print(f"Failed to load or create index for application_id '{self.application_id}'. {e}")
 
     def _get_index_path(self):
         """

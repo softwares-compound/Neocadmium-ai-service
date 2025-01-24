@@ -9,7 +9,6 @@ from app.core.config import API_BASE_URL
 from app.services.electron_ws_manager import electron_ws_manager
 
 
-
 async def websocket_endpoint(websocket: WebSocket):
     """
     WebSocket endpoint to handle Electron communication with keep-alive.
@@ -48,15 +47,21 @@ async def websocket_handler(websocket: WebSocket):
     while True:
         try:
             message = await websocket.receive_json()
-            if message.get("type") == "authenticate":
+            message_type = message.get("type")
+
+            if message_type == "authenticate":
                 await handle_authentication(websocket, message)
 
                 # After authentication, start a new Rust WebSocket connection
                 app = websocket.app
                 start_websocket_client(app)  # Reconnect with the new credentials
                 
+            elif message_type == "new_application":
+                await handle_new_application(websocket, message)
+
             else:
                 await electron_ws_manager.handle_message(websocket, message)
+
         except Exception as e:
             print(f"Error receiving message: {e}")
             break
@@ -107,7 +112,7 @@ async def handle_authentication(websocket: WebSocket, message: dict):
         "organization_id": organization_id
     }
 
-    # Remove previous `NaiveRAGService` instance if it exists
+    # Remove previous `NaiveRAGService` instances
     if hasattr(app.state, "naive_rag_services"):
         app.state.naive_rag_services.clear()  # Clear all previous services
 
@@ -131,4 +136,49 @@ async def handle_authentication(websocket: WebSocket, message: dict):
         "status": "authenticated",
         "message": f"NaiveRAGService created for organization {organization_id}",
         "application_ids": application_ids
+    })
+
+
+async def handle_new_application(websocket: WebSocket, message: dict):
+    """
+    Handles creating a new NaiveRAGService instance when a new application is registered.
+    """
+    app = websocket.app  # Get FastAPI app instance
+    application_id = message.get("application_id")
+
+    if not application_id:
+        await websocket.send_json({"error": "Missing required field: application_id"})
+        return
+
+    # Ensure organization context is already set
+    if not hasattr(app.state, "organization_context"):
+        await websocket.send_json({"error": "No active organization context found."})
+        return
+
+    # Add new application ID to NaiveRAGService
+    if not hasattr(app.state, "naive_rag_services"):
+        app.state.naive_rag_services = {}
+
+    # Check if the service already exists
+    if application_id in app.state.naive_rag_services:
+        service = app.state.naive_rag_services[application_id]
+        if not service.index:
+            try:
+                print(f"Application {application_id} already exists in RAG services.")
+                vector_index = service._load_or_create_index()
+            except Exception as e:
+                await websocket.send_json({"message": f"Could not create NaiveRAGService for application {application_id}.{e}"})
+            await websocket.send_json({"message": f"Application {application_id} already exists in RAG services."})
+        return
+
+    # Create and store new NaiveRAGService instance
+    app.state.naive_rag_services[application_id] = NaiveRAGService(
+        application_id=application_id, persist_dir="./storage/naive_rag_storage"
+    )
+
+    print(f"New NaiveRAGService initialized for application: {application_id}")
+
+    await websocket.send_json({
+        "status": "success",
+        "message": f"New NaiveRAGService created for application {application_id}"
     })
