@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     cd_id: str = os.getenv("CD_ID", "")
     cd_secret: str = os.getenv("CD_SECRET", "")
     api_base_url: str = os.getenv("API_BASE_URL", "https://cadmium.softwarescompound.in")
-    response_streaming: bool = os.getenv("RESPONSE_STREAMING", False)
+    response_streaming: bool = os.getenv("RESPONSE_STREAMING", True)
     
     model_config = SettingsConfigDict(env_file=".env")
     

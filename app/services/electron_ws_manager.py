@@ -65,3 +65,5 @@ class ElectronWebSocketManager:
                 await websocket.send_json(message)
             except Exception as e:
                 print(f"Failed to send message: {e}")
+
+electron_ws_manager = ElectronWebSocketManager()

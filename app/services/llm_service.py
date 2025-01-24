@@ -1,7 +1,9 @@
 from datetime import datetime
 from fastapi import HTTPException
 from llama_index.core.base.response.schema import Response, StreamingResponse
-from app.core.websocket_server import electron_ws_manager
+
+from app.services.electron_ws_manager import electron_ws_manager
+
 
 async def process_log_with_rag(log_data: dict,log_id:str, application_id: str, app):
     """
